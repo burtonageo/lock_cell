@@ -112,6 +112,7 @@ impl<T> LockCell<T> {
     /// # }
     /// ```
     #[inline]
+    #[track_caller]
     pub fn replace(&self, new_value: T) -> T {
         let mut lock = self.lock();
         mem::replace(&mut *lock, new_value)
@@ -139,6 +140,7 @@ impl<T> LockCell<T> {
     ///
     /// [`Default::default()`]: https://doc.rust-lang.org/stable/std/default/trait.Default.html
     #[inline]
+    #[track_caller]
     pub fn take(&self) -> T
     where
         T: Default,
