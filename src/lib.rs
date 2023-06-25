@@ -32,7 +32,7 @@ use core::{
     cell::{Cell, UnsafeCell},
     fmt,
     marker::PhantomData,
-    mem,
+    mem::{self, ManuallyDrop},
     ops::{Deref, DerefMut, FnOnce},
     panic::Location,
 };
@@ -392,6 +392,8 @@ impl<'a, T: ?Sized> LockGuard<'a, T> {
     where
         F: FnOnce(&mut T) -> &mut U,
     {
+        let mut this = mem::ManuallyDrop::new(this);
+
         LockGuard {
             value: unsafe { func(&mut *this.value) as *mut _ },
             is_locked: this.is_locked,
@@ -438,9 +440,11 @@ impl<'a, T: ?Sized> LockGuard<'a, T> {
     where
         F: FnOnce(&mut T) -> Option<&mut U>,
     {
+        let mut this = mem::ManuallyDrop::new(this);
+
         let value = match unsafe { func(&mut *this.value) } {
             Some(value) => value as *mut _,
-            _ => return Err(this),
+            _ => return Err(ManuallyDrop::into_inner(this)),
         };
 
         Ok(LockGuard {
