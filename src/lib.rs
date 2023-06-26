@@ -57,7 +57,7 @@ impl<T> LockCell<T> {
     /// # Examples
     ///
     /// ```
-    /// # use lock_cell::LockCell;
+    /// use lock_cell::LockCell;
     /// # fn main() {
     /// let cell = LockCell::new("I could be anything!".to_string());
     /// # let _ = cell;
@@ -76,7 +76,7 @@ impl<T> LockCell<T> {
     /// # Examples
     ///
     /// ```
-    /// # use lock_cell::LockCell;
+    /// use lock_cell::LockCell;
     /// # fn main() {
     /// let cell = LockCell::new(5);
     ///
@@ -100,7 +100,7 @@ impl<T> LockCell<T> {
     /// # Examples
     ///
     /// ```
-    /// # use lock_cell::LockCell;
+    /// use lock_cell::LockCell;
     /// # fn main() {
     /// let cell = LockCell::new(5);
     ///
@@ -162,7 +162,7 @@ impl<T> LockCell<T> {
     /// # Examples
     ///
     /// ```
-    /// # use lock_cell::LockCell;
+    /// use lock_cell::LockCell;
     /// # fn main() {
     /// let cell = LockCell::new(5);
     ///
@@ -247,7 +247,7 @@ impl<T: ?Sized> LockCell<T> {
     /// # Examples
     ///
     /// ```
-    /// # use lock_cell::LockCell;
+    /// use lock_cell::LockCell;
     /// # fn main() {
     /// let cell = LockCell::new("Hello".to_string());
     ///
@@ -270,7 +270,7 @@ impl<T: ?Sized> LockCell<T> {
     /// # Examples
     ///
     /// ```
-    /// # use lock_cell::LockCell;
+    /// use lock_cell::LockCell;
     /// # fn main() {
     /// let cell = LockCell::new(5);
     ///
@@ -295,7 +295,7 @@ impl<T: ?Sized> LockCell<T> {
     /// # Examples
     ///
     /// ```
-    /// # use lock_cell::LockCell;
+    /// use lock_cell::LockCell;
     /// # fn main() {
     /// let mut cell = LockCell::new(54);
     ///
@@ -318,7 +318,7 @@ impl<T: ?Sized> LockCell<T> {
     ///
     /// ```
     /// # use core::mem;
-    /// # use lock_cell::LockCell;
+    /// use lock_cell::LockCell;
     /// # fn main() {
     /// let mut cell = LockCell::new(12);
     ///
@@ -411,7 +411,7 @@ impl<'a, T: ?Sized> LockGuard<'a, T> {
     /// # Examples
     ///
     /// ```
-    /// # use lock_cell::{LockCell, LockGuard};
+    /// use lock_cell::{LockCell, LockGuard};
     /// # fn main() {
     /// let cell = LockCell::<(i32, i32)>::default();
     /// let lock = cell.lock();
@@ -448,7 +448,7 @@ impl<'a, T: ?Sized> LockGuard<'a, T> {
     /// # Examples
     ///
     /// ```
-    /// # use lock_cell::{LockCell, LockGuard};
+    /// use lock_cell::{LockCell, LockGuard};
     /// # fn main() {
     /// let cell = LockCell::new(Some(0));
     /// let lock = cell.lock();
