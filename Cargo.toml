@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "A custom locking cell type written in Rust"
 license = "0BSD"
+keywords = ["cell", "lock", "mutex", "no_std"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
