@@ -118,6 +118,40 @@ impl<T> LockCell<T> {
         mem::replace(&mut *lock, new_value)
     }
 
+    /// Replaces the wrapped value with a new value computed from the function `f`,
+    /// returning the old value without deinitializing either.
+    ///
+    /// # Panics
+    ///
+    /// This method will panic if the `LockCell` is locked.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lock_cell::LockCell;
+    /// # fn main() {
+    /// let cell = LockCell::new(5);
+    /// let old_value = cell.replace_with(|old| {
+    ///     *old += 1;
+    ///     *old + 1
+    /// });
+    ///
+    /// assert_eq!(old_value, 6);
+    ///
+    /// assert_eq!(cell.into_inner(), 7);
+    /// # }
+    /// ```
+    #[inline]
+    #[track_caller]
+    pub fn replace_with<F>(&self, f: F) -> T
+    where
+        F: FnOnce(&mut T) -> T,
+    {
+        let mut lock = self.lock();
+        let replacement = f(&mut *lock);
+        mem::replace(&mut *lock, replacement)
+    }
+
     /// Replaces the value in this `LockCell` with the [`Default::default()`] value,
     /// returning the previous value in the `LockCell`.
     ///
