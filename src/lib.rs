@@ -159,6 +159,8 @@ impl<T> LockCell<T> {
     ///
     /// This method will panic if the cell is locked.
     ///
+    /// # Examples
+    ///
     /// ```
     /// # use lock_cell::LockCell;
     /// # fn main() {
