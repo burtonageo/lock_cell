@@ -640,6 +640,7 @@ mod tests {
             Ok(new_lk) => new_lk,
             Err(old_lk) => panic!("{:?}", old_lk),
         };
+        assert!(mtx.is_locked());
         *lk = 21;
         assert_eq!(*lk, 21);
         match LockGuard::filter_map(lk, |_| -> Option<&mut i32> { None }) {
