@@ -254,9 +254,9 @@ impl<T: ?Sized> LockCell<T> {
     ///
     /// let second_access = cell.try_lock();
     /// assert!(second_access.is_err());
-    ///
     /// # Ok(())
     /// # }
+    /// ```
     #[inline]
     #[track_caller]
     pub fn try_lock(&self) -> Result<LockGuard<'_, T>, TryLockError> {
