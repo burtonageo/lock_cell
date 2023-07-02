@@ -90,6 +90,35 @@ impl<T> LockCell<T> {
         self.value.into_inner()
     }
 
+    /// Swaps the wrapped values of `self` and `rhs`.
+    ///
+    /// This function corresponds to [`std::mem::swap`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if either `LockCell` is locked, or if `self` and `rhs` point to the same
+    /// `LockCell`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lock_cell::LockCell;
+    /// # fn main() {
+    /// let cell_1 = LockCell::new(3);
+    /// let cell_2 = LockCell::new(24);
+    ///
+    /// cell_1.swap(&cell_2);
+    ///
+    /// assert_eq!(cell_1.into_inner(), 24);
+    /// assert_eq!(cell_2.into_inner(), 3);
+    /// # }
+    /// ```
+    ///
+    /// [`std::mem::swap`]: https://doc.rust-lang.org/std/mem/fn.swap.html
+    pub fn swap(&self, rhs: &LockCell<T>) {
+        mem::swap(&mut *self.lock(), &mut *rhs.lock());
+    }
+
     /// Sets the value in this `LockCell` to `new_value`, returning the previous value
     /// in the `LockCell`.
     ///
