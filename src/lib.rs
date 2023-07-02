@@ -3,6 +3,15 @@
 // SPDX-License-Identifier: 0BSD
 
 #![cfg_attr(not(feature = "enable_std"), no_std)]
+#![warn(
+    clippy::cargo,
+    clippy::complexity,
+    clippy::pedantic,
+    clippy::perf,
+    clippy::style,
+    clippy::suspicious,
+    clippy::undocumented_unsafe_blocks
+)]
 
 //! This crate provides the [`LockCell<T>`] and other supportings types.
 //!
@@ -29,8 +38,8 @@
 
 use core::{
     borrow::{Borrow, BorrowMut},
-    convert::{AsRef, AsMut, TryFrom},
     cell::{Cell, UnsafeCell},
+    convert::{AsMut, AsRef, TryFrom},
     fmt,
     marker::PhantomData,
     mem::{self, ManuallyDrop},
@@ -67,8 +76,8 @@ impl<T> LockCell<T> {
     #[inline]
     pub const fn new(value: T) -> Self {
         Self {
-            value: UnsafeCell::new(value),
             is_locked: Cell::new(false),
+            value: UnsafeCell::new(value),
         }
     }
 
@@ -250,9 +259,9 @@ impl<T: ?Sized> LockCell<T> {
     /// # }
     #[inline]
     #[track_caller]
-    pub fn try_lock<'a>(&'a self) -> Result<LockGuard<'a, T>, TryLockError> {
+    pub fn try_lock(&self) -> Result<LockGuard<'_, T>, TryLockError> {
         if self.is_locked.replace(true) {
-            return Err(TryLockError::new(Location::caller()))
+            return Err(TryLockError::new(Location::caller()));
         }
 
         Ok(LockGuard {
@@ -293,7 +302,7 @@ impl<T: ?Sized> LockCell<T> {
     /// [`is_locked()`]: ./struct.LockGuard.html#method.is_locked
     #[inline]
     #[track_caller]
-    pub fn lock<'a>(&'a self) -> LockGuard<'a, T> {
+    pub fn lock(&self) -> LockGuard<'_, T> {
         self.try_lock().expect("already locked")
     }
 
@@ -398,20 +407,19 @@ impl<T: fmt::Debug> fmt::Debug for LockCell<T> {
     #[inline]
     fn fmt(&self, fmtr: &mut fmt::Formatter<'_>) -> fmt::Result {
         let lock_result = self.try_lock();
-        let value: &dyn fmt::Debug = match lock_result {
-            Ok(ref value) => &*value,
-            Err(_) => {
-                struct LockedPlaceholder;
-                impl fmt::Debug for LockedPlaceholder {
-                    #[inline]
-                    fn fmt(&self, fmtr: &mut fmt::Formatter<'_>) -> fmt::Result {
-                        fmtr.write_str("<locked>")
-                    }
+        let value: &dyn fmt::Debug = if let Ok(value) = lock_result.as_deref() {
+            value
+        } else {
+            struct LockedPlaceholder;
+            impl fmt::Debug for LockedPlaceholder {
+                #[inline]
+                fn fmt(&self, fmtr: &mut fmt::Formatter<'_>) -> fmt::Result {
+                    fmtr.write_str("<locked>")
                 }
-
-                const PLACEHOLDER: LockedPlaceholder = LockedPlaceholder;
-                &PLACEHOLDER
             }
+
+            const PLACEHOLDER: LockedPlaceholder = LockedPlaceholder;
+            &PLACEHOLDER
         };
 
         fmtr.debug_struct("LockCell").field("value", value).finish()
@@ -443,16 +451,16 @@ impl<T> From<T> for LockCell<T> {
 /// [`LockCell::try_lock()`]: ./struct.LockCell.html#method.try_lock
 /// [`LockCell::lock()`]: ./struct.LockCell.html#method.lock
 /// [module level documentation]: ./index.html
-pub struct LockGuard<'a, T: ?Sized> {
+pub struct LockGuard<'lock, T: ?Sized> {
     /// The location of the original value in the `LockCell`.
     value: *mut T,
     /// The lock state of the `LockCell`.
-    is_locked: &'a Cell<bool>,
+    is_locked: &'lock Cell<bool>,
     /// Phantom data.
-    _boo: PhantomData<&'a UnsafeCell<T>>,
+    _boo: PhantomData<&'lock UnsafeCell<T>>,
 }
 
-impl<'a, T: ?Sized> LockGuard<'a, T> {
+impl<'lock, T: ?Sized> LockGuard<'lock, T> {
     /// Applies the given `func` to the contents `LockGuard` to return a new `LockGuard` which
     /// points to a sub-part of the original data.
     ///
@@ -474,14 +482,16 @@ impl<'a, T: ?Sized> LockGuard<'a, T> {
     /// ```
     #[inline]
     #[track_caller]
-    pub fn map<F, U: ?Sized>(this: Self, func: F) -> LockGuard<'a, U>
+    pub fn map<F, U: ?Sized>(this: Self, func: F) -> LockGuard<'lock, U>
     where
         F: FnOnce(&mut T) -> &mut U,
     {
         let mut this = mem::ManuallyDrop::new(this);
 
         LockGuard {
-            value: unsafe { func(&mut *this.value) as *mut _ },
+            // SAFETY:
+            // The `value` ptr has been created from a valid `LockCell`, so it always valid.
+            value: unsafe { func(&mut *this.value) } as *mut _,
             is_locked: this.is_locked,
             _boo: PhantomData,
         }
@@ -524,18 +534,21 @@ impl<'a, T: ?Sized> LockGuard<'a, T> {
     /// ```
     #[inline]
     #[track_caller]
-    pub fn filter_map<F, U: ?Sized>(this: Self, func: F) -> Result<LockGuard<'a, U>, Self>
+    pub fn filter_map<F, U: ?Sized>(this: Self, func: F) -> Result<LockGuard<'lock, U>, Self>
     where
         F: FnOnce(&mut T) -> Option<&mut U>,
     {
         let mut this = mem::ManuallyDrop::new(this);
 
+        // SAFETY:
+        // The `value` ptr has been created from a valid `LockCell`, so it always valid.
         let value = match unsafe { func(&mut *this.value) } {
             Some(value) => value as *mut _,
             _ => return Err(ManuallyDrop::into_inner(this)),
         };
 
         Ok(LockGuard {
+            // SAFETY: value has been created from a reference so it is always valid.
             value: unsafe { &mut *value },
             is_locked: this.is_locked,
             _boo: PhantomData,
@@ -543,76 +556,88 @@ impl<'a, T: ?Sized> LockGuard<'a, T> {
     }
 }
 
-impl<'a, T> TryFrom<&'a LockCell<T>> for LockGuard<'a, T> {
+impl<'lock, T> TryFrom<&'lock LockCell<T>> for LockGuard<'lock, T> {
     type Error = TryLockError;
     #[inline]
     #[track_caller]
-    fn try_from(lock_cell: &'a LockCell<T>) -> Result<Self, Self::Error> {
+    fn try_from(lock_cell: &'lock LockCell<T>) -> Result<Self, Self::Error> {
         lock_cell.try_lock()
     }
 }
 
-impl<'a, T: ?Sized> Drop for LockGuard<'a, T> {
+impl<'lock, T: ?Sized> Drop for LockGuard<'lock, T> {
     #[inline]
     fn drop(&mut self) {
         self.is_locked.set(false);
     }
 }
 
-impl<'a, T: ?Sized> AsRef<T> for LockGuard<'a, T> {
+impl<'lock, T: ?Sized> AsRef<T> for LockGuard<'lock, T> {
     #[inline]
     fn as_ref(&self) -> &T {
+        // SAFETY:
+        // The `value` ptr has been created from a valid `LockCell`, so it always valid.
         unsafe { &*self.value }
     }
 }
 
-impl<'a, T: ?Sized> AsMut<T> for LockGuard<'a, T> {
+impl<'lock, T: ?Sized> AsMut<T> for LockGuard<'lock, T> {
     #[inline]
     fn as_mut(&mut self) -> &mut T {
+        // SAFETY:
+        // The `value` ptr has been created from a valid `LockCell`, so it always valid.
         unsafe { &mut *self.value }
     }
 }
 
-impl<'a, T: ?Sized> Borrow<T> for LockGuard<'a, T> {
+impl<'lock, T: ?Sized> Borrow<T> for LockGuard<'lock, T> {
     #[inline]
     fn borrow(&self) -> &T {
+        // SAFETY:
+        // The `value` ptr has been created from a valid `LockCell`, so it always valid.
         unsafe { &*self.value }
     }
 }
 
-impl<'a, T: ?Sized> BorrowMut<T> for LockGuard<'a, T> {
+impl<'lock, T: ?Sized> BorrowMut<T> for LockGuard<'lock, T> {
     #[inline]
     fn borrow_mut(&mut self) -> &mut T {
+        // SAFETY:
+        // The `value` ptr has been created from a valid `LockCell`, so it always valid.
         unsafe { &mut *self.value }
     }
 }
 
-impl<'a, T: ?Sized> Deref for LockGuard<'a, T> {
+impl<'lock, T: ?Sized> Deref for LockGuard<'lock, T> {
     type Target = T;
     #[inline]
     fn deref(&self) -> &T {
+        // SAFETY:
+        // The `value` ptr has been created from a valid `LockCell`, so it always valid.
         unsafe { &*self.value }
     }
 }
 
-impl<'a, T: ?Sized> DerefMut for LockGuard<'a, T> {
+impl<'lock, T: ?Sized> DerefMut for LockGuard<'lock, T> {
     #[inline]
     fn deref_mut(&mut self) -> &mut T {
+        // SAFETY:
+        // The `value` ptr has been created from a valid `LockCell`, so it always valid.
         unsafe { &mut *self.value }
     }
 }
 
-impl<'a, T: fmt::Debug + ?Sized> fmt::Debug for LockGuard<'a, T> {
+impl<'lock, T: fmt::Debug + ?Sized> fmt::Debug for LockGuard<'lock, T> {
     #[inline]
     fn fmt(&self, fmtr: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmtr.debug_struct("LockGuard").field("value", &self.deref()).finish()
+        fmtr.debug_struct("LockGuard").field("value", self).finish()
     }
 }
 
-impl<'a, T: fmt::Display + ?Sized> fmt::Display for LockGuard<'a, T> {
+impl<'lock, T: fmt::Display + ?Sized> fmt::Display for LockGuard<'lock, T> {
     #[inline]
     fn fmt(&self, fmtr: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(&self.deref(), fmtr)
+        fmt::Display::fmt(&**self, fmtr)
     }
 }
 
@@ -629,16 +654,16 @@ impl TryLockError {
     /// Create a new `TryLockError` from the given caller location.
     #[inline]
     const fn new(location: &'static Location<'static>) -> Self {
-        TryLockError {
-            location,
-        }
+        TryLockError { location }
     }
 }
 
 impl fmt::Debug for TryLockError {
     #[inline]
     fn fmt(&self, fmtr: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmtr.debug_struct("TryLockError").field("location", &self.location).finish()
+        fmtr.debug_struct("TryLockError")
+            .field("location", &self.location)
+            .finish()
     }
 }
 
