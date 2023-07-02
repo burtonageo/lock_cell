@@ -6,6 +6,7 @@ description = "A custom locking cell type written in Rust"
 license = "0BSD"
 repository = "https://github.com/burtonageo/lock_cell"
 keywords = ["cell", "lock", "mutex", "no_std"]
+categories = ["No standard library", "Data Structures"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
