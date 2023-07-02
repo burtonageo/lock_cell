@@ -297,6 +297,7 @@ impl<T: ?Sized> LockCell<T> {
     /// assert_eq!(&*lock, "Hello");
     /// # }
     /// ```
+    ///
     /// [`LockGuard`]: ./struct.LockGuard.html
     /// [`try_lock()`]: ./struct.LockGuard.html#method.try_lock
     /// [`is_locked()`]: ./struct.LockGuard.html#method.is_locked
