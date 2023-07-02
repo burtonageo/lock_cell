@@ -19,12 +19,13 @@
 //! your program. Generally, if you have a lot of writers and readers, using a `LockCell`
 //! may be better, as it ensures that writers are less likely to be starved.
 //!
-//! The `Sync` equivalent of a `LockCell` is [`Mutex<T>`].
-//! 
+//! The [`Sync`] equivalent of a `LockCell` is [`Mutex<T>`].
+//!
 //! [`LockCell<T>`]: ./struct.LockCell.html
-//! [`RefCell<T>`]: http://doc.rust-lang.org/stable/std/cell/struct.RefCell.html
-//! [`Rc<T>`]: https://doc.rust-lang.org/stable/std/rc/struct.Rc.html
-//! [`Mutex<T>`]: http://doc.rust-lang.org/stable/std/sync/struct.Mutex.html
+//! [`RefCell<T>`]: http://doc.rust-lang.org/std/cell/struct.RefCell.html
+//! [`Rc<T>`]: https://doc.rust-lang.org/std/rc/struct.Rc.html
+//! [`Mutex<T>`]: http://doc.rust-lang.org/std/sync/struct.Mutex.html
+//! [`Sync`]: https://doc.rust-lang.org/std/marker/trait.Sync.html
 
 use core::{
     borrow::{Borrow, BorrowMut},
@@ -203,7 +204,7 @@ impl<T> LockCell<T> {
     /// # }
     /// ```
     ///
-    /// [`Default::default()`]: https://doc.rust-lang.org/stable/std/default/trait.Default.html
+    /// [`Default::default()`]: https://doc.rust-lang.org/std/default/trait.Default.html
     #[inline]
     #[track_caller]
     pub fn take(&self) -> T
@@ -221,6 +222,8 @@ impl<T: ?Sized> LockCell<T> {
     ///
     /// If this `LockCell` is not locked, the function succeeds and will return a
     /// guard which provides mutable access to the inner value.
+    ///
+    /// # Errors
     ///
     /// If the `LockCell` is already locked, this function will fail and will
     /// return a [`TryLockError`].
@@ -486,6 +489,8 @@ impl<'a, T: ?Sized> LockGuard<'a, T> {
 
     /// Applies the given `func` to the contents of `LockGuard` to return an optional reference
     /// to a part of the original data.
+    ///
+    /// # Errors
     ///
     /// If `func` returns `None`, then the original guard will be returned in the `Err` variant
     /// of the return value.
