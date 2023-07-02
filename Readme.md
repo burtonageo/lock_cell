@@ -15,9 +15,10 @@ Whether you use a `LockCell` or a `RefCell` depends on the structure and behavio
 your program. Generally, if you have a lot of writers and readers, using a `LockCell`
 may be better, as it ensures that writers are less likely to be starved.
 
-The `Sync` equivalent of a `LockCell` is [`Mutex<T>`].
+The [`Sync`] equivalent of a `LockCell` is [`Mutex<T>`].
 
 [`LockCell<T>`]: ./struct.LockCell.html
-[`RefCell<T>`]: http://doc.rust-lang.org/stable/std/cell/struct.RefCell.html
-[`Rc<T>`]: https://doc.rust-lang.org/stable/std/rc/struct.Rc.html
-[`Mutex<T>`]: http://doc.rust-lang.org/stable/std/sync/struct.Mutex.html
+[`RefCell<T>`]: http://doc.rust-lang.org/std/cell/struct.RefCell.html
+[`Rc<T>`]: https://doc.rust-lang.org/std/rc/struct.Rc.html
+[`Mutex<T>`]: http://doc.rust-lang.org/std/sync/struct.Mutex.html
+[`Sync`]: https://doc.rust-lang.org/std/marker/trait.Sync.html
