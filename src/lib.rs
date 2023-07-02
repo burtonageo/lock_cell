@@ -309,6 +309,22 @@ impl<T: ?Sized> LockCell<T> {
         self.value.get_mut()
     }
 
+    /// Return a raw pointer to the underlying data in this `LockCell`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lock_cell::LockCell;
+    /// # fn main() {
+    /// let cell = LockCell::new(5);
+    ///
+    /// let ptr = cell.as_ptr();
+    /// # }
+    /// ```
+    pub fn as_ptr(&self) -> *mut T {
+        self.value.get()
+    }
+
     /// Resets the lock state, in case that any [`LockGuard`]s have been leaked.
     ///
     /// This method takes `self` by `&mut` to ensure that there are no other borrows
