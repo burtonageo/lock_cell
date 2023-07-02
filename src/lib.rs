@@ -1,6 +1,6 @@
-// This crate is released under the terms of the "BSD Zero Clause License".
+// Copyright (c) 2023, George Burton <burtonageo@gmail.com>
 //
-// See either `License.md` or https://opensource.org/license/0bsd/ for more information.
+// SPDX-License-Identifier: 0BSD
 
 #![cfg_attr(not(feature = "enable_std"), no_std)]
 
