@@ -299,8 +299,8 @@ impl<T: ?Sized> LockCell<T> {
     /// ```
     ///
     /// [`LockGuard`]: ./struct.LockGuard.html
-    /// [`try_lock()`]: ./struct.LockGuard.html#method.try_lock
-    /// [`is_locked()`]: ./struct.LockGuard.html#method.is_locked
+    /// [`try_lock()`]: ./struct.LockCell.html#method.try_lock
+    /// [`is_locked()`]: ./struct.LockCell.html#method.is_locked
     #[inline]
     #[track_caller]
     pub fn lock(&self) -> LockGuard<'_, T> {
