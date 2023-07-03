@@ -487,7 +487,7 @@ impl<'lock, T: ?Sized> LockGuard<'lock, T> {
     where
         F: FnOnce(&mut T) -> &mut U,
     {
-        let mut this = mem::ManuallyDrop::new(this);
+        let mut this = ManuallyDrop::new(this);
 
         LockGuard {
             // SAFETY:
@@ -539,7 +539,7 @@ impl<'lock, T: ?Sized> LockGuard<'lock, T> {
     where
         F: FnOnce(&mut T) -> Option<&mut U>,
     {
-        let mut this = mem::ManuallyDrop::new(this);
+        let mut this = ManuallyDrop::new(this);
 
         // SAFETY:
         // The `value` ptr has been created from a valid `LockCell`, so it always valid.
