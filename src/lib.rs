@@ -73,6 +73,7 @@ impl<T> LockCell<T> {
     /// # let _ = cell;
     /// # }
     /// ```
+    #[must_use]
     #[inline]
     pub const fn new(value: T) -> Self {
         Self {
@@ -95,6 +96,7 @@ impl<T> LockCell<T> {
     /// assert_eq!(five, 5);
     /// # }
     /// ```
+    #[must_use]
     #[inline]
     pub fn into_inner(self) -> T {
         self.value.into_inner()
@@ -324,6 +326,7 @@ impl<T: ?Sized> LockCell<T> {
     /// # let _ = lock;
     /// # }
     /// ```
+    #[must_use]
     #[inline]
     pub fn is_locked(&self) -> bool {
         self.is_locked.get()
@@ -346,6 +349,7 @@ impl<T: ?Sized> LockCell<T> {
     /// assert_eq!(cell.into_inner(), 20);
     /// # }
     /// ```
+    #[must_use]
     #[inline]
     pub fn get_mut(&mut self) -> &mut T {
         self.value.get_mut()
@@ -363,6 +367,8 @@ impl<T: ?Sized> LockCell<T> {
     /// let ptr = cell.as_ptr();
     /// # }
     /// ```
+    #[must_use]
+    #[inline]
     pub fn as_ptr(&self) -> *mut T {
         self.value.get()
     }
@@ -452,6 +458,7 @@ impl<T> From<T> for LockCell<T> {
 /// [`LockCell::try_lock()`]: ./struct.LockCell.html#method.try_lock
 /// [`LockCell::lock()`]: ./struct.LockCell.html#method.lock
 /// [module level documentation]: ./index.html
+#[must_use]
 pub struct LockGuard<'lock, T: ?Sized> {
     /// The location of the original value in the `LockCell`.
     value: *mut T,
