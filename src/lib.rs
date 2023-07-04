@@ -127,6 +127,7 @@ impl<T> LockCell<T> {
     /// ```
     ///
     /// [`std::mem::swap`]: https://doc.rust-lang.org/std/mem/fn.swap.html
+    #[inline]
     pub fn swap(&self, rhs: &LockCell<T>) {
         mem::swap(&mut *self.lock(), &mut *rhs.lock());
     }
