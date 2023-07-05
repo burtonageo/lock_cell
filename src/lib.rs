@@ -432,6 +432,12 @@ impl<T: ?Sized> LockCell<T> {
     #[inline]
     pub fn reset_lock(&mut self) -> &mut T {
         self.is_locked.set(false);
+
+        #[cfg(feature = "debug_lockcell")]
+        {
+            self.first_locked_at.set(None);
+        }
+
         self.get_mut()
     }
 }
