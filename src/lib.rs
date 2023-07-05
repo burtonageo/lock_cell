@@ -743,7 +743,7 @@ impl<'lock, T: ?Sized + Ord> Ord for LockGuard<'lock, T> {
 /// An error returned from the [`LockCell::try_lock()`] method to indicate
 /// that the `LockCell` could not be locked.
 ///
-/// [`LockCell::try_lock()`]: ./struct.LockGuard.html#method.try_lock
+/// [`LockCell::try_lock()`]: ./struct.LockCell.html#method.try_lock
 #[non_exhaustive]
 pub struct TryLockError {
     /// The location where the `LockCell` was first locked.
