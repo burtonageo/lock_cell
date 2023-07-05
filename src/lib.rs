@@ -258,8 +258,6 @@ impl<T: ?Sized> LockCell<T> {
     /// If the `LockCell` is already locked, this function will fail and will
     /// return a [`TryLockError`].
     ///
-    /// [`TryLockError`]: ./struct.TryLockError.html
-    ///
     /// # Examples
     ///
     /// ```
@@ -278,6 +276,8 @@ impl<T: ?Sized> LockCell<T> {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// [`TryLockError`]: ./struct.TryLockError.html
     #[inline]
     #[track_caller]
     pub fn try_lock(&self) -> Result<LockGuard<'_, T>, TryLockError> {
