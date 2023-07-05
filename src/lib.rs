@@ -40,6 +40,8 @@
 //! [`Rc<T>`]: https://doc.rust-lang.org/std/rc/struct.Rc.html
 //! [`Mutex<T>`]: http://doc.rust-lang.org/std/sync/struct.Mutex.html
 //! [`Sync`]: https://doc.rust-lang.org/std/marker/trait.Sync.html
+//! [`std::error::Error`]: https://doc.rust-lang.org/std/error/trait.Error.html
+//! [`TryLockError`]: ./struct.TryLockError.html
 
 use core::{
     borrow::{Borrow, BorrowMut},
