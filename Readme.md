@@ -7,8 +7,8 @@ mutability. It is similar to [`RefCell<T>`], except that it only allows
 a single borrow type (a lock). Locking a `LockCell` allows mutating its
 contents freely.
 
-A `LockCell` can only be used in a single threaded context - it cannot be sent or
-shared across different threads. Generally, a `LockCell` will be stored in a [`Rc<T>`]
+A `LockCell` can only be used in a single threaded context - it cannot be shared
+across different threads. Generally, a `LockCell` will be stored in a [`Rc<T>`]
 so that it can be shared.
 
 Whether you use a `LockCell` or a `RefCell` depends on the structure and behavior of
