@@ -52,8 +52,10 @@ use core::panic::Location;
 use core::{
     borrow::{Borrow, BorrowMut},
     cell::{Cell, UnsafeCell},
+    cmp::{Eq, Ord, Ordering, PartialEq, PartialOrd},
     convert::{AsMut, AsRef, TryFrom},
     fmt,
+    hash::{Hash, Hasher},
     marker::PhantomData,
     mem::{self, ManuallyDrop},
     ops::{Deref, DerefMut, FnOnce},
@@ -690,7 +692,51 @@ impl<'lock, T: fmt::Debug + ?Sized> fmt::Debug for LockGuard<'lock, T> {
 impl<'lock, T: fmt::Display + ?Sized> fmt::Display for LockGuard<'lock, T> {
     #[inline]
     fn fmt(&self, fmtr: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(&**self, fmtr)
+        <T as fmt::Display>::fmt(self, fmtr)
+    }
+}
+
+impl<'lock, T: ?Sized + Hash> Hash for LockGuard<'lock, T> {
+    #[inline]
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        <T as Hash>::hash(self, state);
+    }
+}
+
+impl<'lock, T: ?Sized + PartialEq> PartialEq<T> for LockGuard<'lock, T> {
+    #[inline]
+    fn eq(&self, other: &T) -> bool {
+        <T as PartialEq>::eq(self, other)
+    }
+}
+
+impl<'other, 'lock, T: ?Sized + PartialEq> PartialEq<LockGuard<'other, T>> for LockGuard<'lock, T> {
+    #[inline]
+    fn eq(&self, other: &LockGuard<'other, T>) -> bool {
+        <T as PartialEq>::eq(self, other)
+    }
+}
+
+impl<'lock, T: ?Sized + Eq> Eq for LockGuard<'lock, T> {}
+
+impl<'lock, T: ?Sized + PartialOrd> PartialOrd<T> for LockGuard<'lock, T> {
+    #[inline]
+    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
+        <T as PartialOrd>::partial_cmp(self, other)
+    }
+}
+
+impl<'other, 'lock, T: ?Sized + PartialOrd> PartialOrd<LockGuard<'other, T>> for LockGuard<'lock, T> {
+    #[inline]
+    fn partial_cmp(&self, other: &LockGuard<'other, T>) -> Option<Ordering> {
+        <T as PartialOrd>::partial_cmp(self, other)
+    }
+}
+
+impl<'lock, T: ?Sized + Ord> Ord for LockGuard<'lock, T> {
+    #[inline]
+    fn cmp(&self, other: &LockGuard<'lock, T>) -> Ordering {
+        <T as Ord>::cmp(self, other)
     }
 }
 
