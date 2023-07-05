@@ -388,8 +388,8 @@ impl<T: ?Sized> LockCell<T> {
     ///
     /// # Notes
     ///
-    /// This function does not lock the `LockCell`. Therefore, any mutations to the
-    /// returned pointer must be synchronized in some other way, or undefined behaviour
+    /// This function does not lock the `LockCell`. Therefore, any mutations made through
+    /// the returned pointer must be synchronized in some other way, or undefined behaviour
     /// may occur.
     /// 
     /// # Examples
