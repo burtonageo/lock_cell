@@ -14,6 +14,7 @@ categories = ["No standard library", "Data Structures"]
 
 [features]
 default = ["enable_std"]
+debug_lockcell = []
 enable_std = []
 # rust-analyzer wants this feature present here.
 logging = []

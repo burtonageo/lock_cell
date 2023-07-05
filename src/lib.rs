@@ -35,6 +35,10 @@
 //! * The `enable_std` feature enables the standard library. This provides an implementation of
 //!   [`std::error::Error`] for the [`TryLockError`] type. This feature is enabled by default.
 //!
+//! * The `debug_lockcell` feature tracks the location of each `lock()` call in the `LockCell`,
+//!   allowing the developer to compare the first lock location in their file to the panicking
+//!   lock location, aiding in debugging.
+//!
 //! [`LockCell<T>`]: ./struct.LockCell.html
 //! [`RefCell<T>`]: http://doc.rust-lang.org/std/cell/struct.RefCell.html
 //! [`Rc<T>`]: https://doc.rust-lang.org/std/rc/struct.Rc.html
@@ -43,6 +47,8 @@
 //! [`std::error::Error`]: https://doc.rust-lang.org/std/error/trait.Error.html
 //! [`TryLockError`]: ./struct.TryLockError.html
 
+#[cfg(feature = "debug_lockcell")]
+use core::panic::Location;
 use core::{
     borrow::{Borrow, BorrowMut},
     cell::{Cell, UnsafeCell},
@@ -51,7 +57,6 @@ use core::{
     marker::PhantomData,
     mem::{self, ManuallyDrop},
     ops::{Deref, DerefMut, FnOnce},
-    panic::Location,
 };
 #[cfg(feature = "enable_std")]
 use std::error::Error as StdError;
@@ -64,6 +69,10 @@ use std::error::Error as StdError;
 pub struct LockCell<T: ?Sized> {
     /// Used to track the lock state of the `LockCell`.
     is_locked: Cell<bool>,
+    /// Stores where the `LockCell` was first locked. This is used as
+    /// part of the `debug_lockcell` feature to help debug double locks.
+    #[cfg(feature = "debug_lockcell")]
+    first_locked_at: Cell<Option<&'static Location<'static>>>,
     /// The inner value of the `LockCell`.
     value: UnsafeCell<T>,
 }
@@ -85,6 +94,8 @@ impl<T> LockCell<T> {
     pub const fn new(value: T) -> Self {
         Self {
             is_locked: Cell::new(false),
+            #[cfg(feature = "debug_lockcell")]
+            first_locked_at: Cell::new(None),
             value: UnsafeCell::new(value),
         }
     }
@@ -271,12 +282,19 @@ impl<T: ?Sized> LockCell<T> {
     #[track_caller]
     pub fn try_lock(&self) -> Result<LockGuard<'_, T>, TryLockError> {
         if self.is_locked.replace(true) {
-            return Err(TryLockError::new(Location::caller()));
+            return Err(TryLockError::new(self));
+        }
+
+        #[cfg(feature = "debug_lockcell")]
+        {
+            self.first_locked_at.set(Some(Location::caller()));
         }
 
         Ok(LockGuard {
             value: self.value.get(),
             is_locked: &self.is_locked,
+            #[cfg(feature = "debug_lockcell")]
+            locked_at: &self.first_locked_at,
             _boo: PhantomData,
         })
     }
@@ -472,6 +490,11 @@ pub struct LockGuard<'lock, T: ?Sized> {
     value: *mut T,
     /// The lock state of the `LockCell`.
     is_locked: &'lock Cell<bool>,
+    /// The location where the original `LockCell` was first locked.
+    ///
+    /// The `LockGuard` will reset this value when it is dropped.
+    #[cfg(feature = "debug_lockcell")]
+    locked_at: &'lock Cell<Option<&'static Location<'static>>>,
     /// Phantom data.
     _boo: PhantomData<&'lock UnsafeCell<T>>,
 }
@@ -508,6 +531,8 @@ impl<'lock, T: ?Sized> LockGuard<'lock, T> {
             // SAFETY:
             // The `value` ptr has been created from a valid `LockCell`, so it always valid.
             value: unsafe { func(&mut *this.value) } as *mut _,
+            #[cfg(feature = "debug_lockcell")]
+            locked_at: this.locked_at,
             is_locked: this.is_locked,
             _boo: PhantomData,
         }
@@ -566,6 +591,8 @@ impl<'lock, T: ?Sized> LockGuard<'lock, T> {
         Ok(LockGuard {
             // SAFETY: value has been created from a reference so it is always valid.
             value: unsafe { &mut *value },
+            #[cfg(feature = "debug_lockcell")]
+            locked_at: this.locked_at,
             is_locked: this.is_locked,
             _boo: PhantomData,
         })
@@ -585,6 +612,10 @@ impl<'lock, T: ?Sized> Drop for LockGuard<'lock, T> {
     #[inline]
     fn drop(&mut self) {
         self.is_locked.set(false);
+        #[cfg(feature = "debug_lockcell")]
+        {
+            self.locked_at.set(None);
+        }
     }
 }
 
@@ -663,30 +694,66 @@ impl<'lock, T: fmt::Display + ?Sized> fmt::Display for LockGuard<'lock, T> {
 /// [`LockCell::try_lock()`]: ./struct.LockGuard.html#method.try_lock
 #[non_exhaustive]
 pub struct TryLockError {
-    location: &'static Location<'static>,
+    /// The location where the `LockCell` was first locked.
+    #[cfg(feature = "debug_lockcell")]
+    first_lock_location: &'static Location<'static>,
+    /// The latest location where the `LockCell` was locked. This should provide
+    /// the location of the erroneous lock.
+    #[cfg(feature = "debug_lockcell")]
+    latest_lock_location: &'static Location<'static>,
+    _priv: (),
 }
 
 impl TryLockError {
     /// Create a new `TryLockError` from the given caller location.
+    #[cfg_attr(not(feature = "debug_lockcell"), allow(unused_variables))]
+    #[track_caller]
     #[inline]
-    const fn new(location: &'static Location<'static>) -> Self {
-        TryLockError { location }
+    fn new<T: ?Sized>(cell: &LockCell<T>) -> Self {
+        TryLockError {
+            #[cfg(feature = "debug_lockcell")]
+            first_lock_location: cell
+                .first_locked_at
+                .get()
+                .expect("Cell must be already locked"),
+            #[cfg(feature = "debug_lockcell")]
+            latest_lock_location: Location::caller(),
+            _priv: (),
+        }
     }
 }
 
 impl fmt::Debug for TryLockError {
     #[inline]
     fn fmt(&self, fmtr: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmtr.debug_struct("TryLockError")
-            .field("location", &self.location)
-            .finish()
+        let mut builder = fmtr.debug_struct("TryLockError");
+
+        #[cfg(feature = "debug_lockcell")]
+        {
+            builder.field("first_locked_at", &self.first_lock_location);
+            builder.field("last_locked_at", &self.latest_lock_location);
+        }
+
+        builder.finish_non_exhaustive()
     }
 }
 
 impl fmt::Display for TryLockError {
     #[inline]
     fn fmt(&self, fmtr: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmtr.write_str("already locked")
+        #[cfg(feature = "debug_lockcell")]
+        {
+            write!(
+                fmtr,
+                "first lock at {} conflicts with lock at {}",
+                self.first_lock_location, self.latest_lock_location,
+            )
+        }
+
+        #[cfg(not(feature = "debug_lockcell"))]
+        {
+            fmtr.write_str("already locked")
+        }
     }
 }
 
