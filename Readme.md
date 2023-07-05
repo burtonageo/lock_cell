@@ -17,6 +17,11 @@ may be better, as it ensures that writers are less likely to be starved.
 
 The [`Sync`] equivalent of a `LockCell` is [`Mutex<T>`].
 
+# Features
+
+* The `enable_std` feature enables the standard library. This provides an implementation of
+  [`std::error::Error`] for the [`TryLockError`] type. This feature is enabled by default.
+
 [`LockCell<T>`]: ./struct.LockCell.html
 [`RefCell<T>`]: http://doc.rust-lang.org/std/cell/struct.RefCell.html
 [`Rc<T>`]: https://doc.rust-lang.org/std/rc/struct.Rc.html
