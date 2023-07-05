@@ -385,6 +385,12 @@ impl<T: ?Sized> LockCell<T> {
 
     /// Return a raw pointer to the underlying data in this `LockCell`.
     ///
+    /// # Notes
+    ///
+    /// This function does not lock the `LockCell`. Therefore, any mutations to the
+    /// returned pointer must be synchronized in some other way, or undefined behaviour
+    /// may occur.
+    /// 
     /// # Examples
     ///
     /// ```
