@@ -535,7 +535,6 @@ impl<'lock, T: ?Sized> LockGuard<'lock, T> {
     /// # }
     /// ```
     #[inline]
-    #[track_caller]
     pub fn map<F, U: ?Sized>(this: Self, func: F) -> LockGuard<'lock, U>
     where
         F: FnOnce(&mut T) -> &mut U,
@@ -589,7 +588,6 @@ impl<'lock, T: ?Sized> LockGuard<'lock, T> {
     /// # }
     /// ```
     #[inline]
-    #[track_caller]
     pub fn filter_map<F, U: ?Sized>(this: Self, func: F) -> Result<LockGuard<'lock, U>, Self>
     where
         F: FnOnce(&mut T) -> Option<&mut U>,
