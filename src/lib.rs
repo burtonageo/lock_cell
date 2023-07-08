@@ -52,7 +52,7 @@ use core::panic::Location;
 use core::{
     borrow::{Borrow, BorrowMut},
     cell::{Cell, UnsafeCell},
-    cmp::{Eq, Ord, Ordering, PartialEq, PartialOrd},
+    cmp::{Ordering, PartialEq, PartialOrd},
     convert::{AsMut, AsRef, TryFrom},
     fmt,
     hash::{Hash, Hasher},
