@@ -708,40 +708,17 @@ impl<'lock, T: ?Sized + Hash> Hash for LockGuard<'lock, T> {
     }
 }
 
-impl<'lock, T: ?Sized + PartialEq> PartialEq<T> for LockGuard<'lock, T> {
+impl<'lock, T: ?Sized + PartialEq<U>, U: ?Sized> PartialEq<U> for LockGuard<'lock, T> {
     #[inline]
-    fn eq(&self, other: &T) -> bool {
-        <T as PartialEq>::eq(self, other)
+    fn eq(&self, other: &U) -> bool {
+        <T as PartialEq<U>>::eq(self, other)
     }
 }
 
-impl<'other, 'lock, T: ?Sized + PartialEq> PartialEq<LockGuard<'other, T>> for LockGuard<'lock, T> {
+impl<'lock, T: ?Sized + PartialOrd<U>, U: ?Sized> PartialOrd<U> for LockGuard<'lock, T> {
     #[inline]
-    fn eq(&self, other: &LockGuard<'other, T>) -> bool {
-        <T as PartialEq>::eq(self, other)
-    }
-}
-
-impl<'lock, T: ?Sized + Eq> Eq for LockGuard<'lock, T> {}
-
-impl<'lock, T: ?Sized + PartialOrd> PartialOrd<T> for LockGuard<'lock, T> {
-    #[inline]
-    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
-        <T as PartialOrd>::partial_cmp(self, other)
-    }
-}
-
-impl<'other, 'lock, T: ?Sized + PartialOrd> PartialOrd<LockGuard<'other, T>> for LockGuard<'lock, T> {
-    #[inline]
-    fn partial_cmp(&self, other: &LockGuard<'other, T>) -> Option<Ordering> {
-        <T as PartialOrd>::partial_cmp(self, other)
-    }
-}
-
-impl<'lock, T: ?Sized + Ord> Ord for LockGuard<'lock, T> {
-    #[inline]
-    fn cmp(&self, other: &LockGuard<'lock, T>) -> Ordering {
-        <T as Ord>::cmp(self, other)
+    fn partial_cmp(&self, other: &U) -> Option<Ordering> {
+        <T as PartialOrd<U>>::partial_cmp(self, other)
     }
 }
 
