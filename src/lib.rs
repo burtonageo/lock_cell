@@ -642,6 +642,7 @@ impl<'lock, T: ?Sized> Drop for LockGuard<'lock, T> {
 }
 
 impl<'lock, T: ?Sized> AsRef<T> for LockGuard<'lock, T> {
+    #[must_use]
     #[inline]
     fn as_ref(&self) -> &T {
         // SAFETY:
@@ -651,6 +652,7 @@ impl<'lock, T: ?Sized> AsRef<T> for LockGuard<'lock, T> {
 }
 
 impl<'lock, T: ?Sized> AsMut<T> for LockGuard<'lock, T> {
+    #[must_use]
     #[inline]
     fn as_mut(&mut self) -> &mut T {
         // SAFETY:
@@ -660,6 +662,7 @@ impl<'lock, T: ?Sized> AsMut<T> for LockGuard<'lock, T> {
 }
 
 impl<'lock, T: ?Sized> Borrow<T> for LockGuard<'lock, T> {
+    #[must_use]
     #[inline]
     fn borrow(&self) -> &T {
         // SAFETY:
@@ -669,6 +672,7 @@ impl<'lock, T: ?Sized> Borrow<T> for LockGuard<'lock, T> {
 }
 
 impl<'lock, T: ?Sized> BorrowMut<T> for LockGuard<'lock, T> {
+    #[must_use]
     #[inline]
     fn borrow_mut(&mut self) -> &mut T {
         // SAFETY:
@@ -751,6 +755,7 @@ impl TryLockError {
     /// Create a new `TryLockError` from the given caller location.
     #[cfg_attr(not(feature = "debug_lockcell"), allow(unused_variables))]
     #[track_caller]
+    #[must_use]
     #[inline]
     fn new<T: ?Sized>(cell: &LockCell<T>) -> Self {
         TryLockError {
