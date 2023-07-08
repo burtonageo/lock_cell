@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: 0BSD
 
 #![cfg_attr(not(feature = "enable_std"), no_std)]
+#![cfg_attr(feature = "nightly", feature(error_in_core))]
 #![warn(
     clippy::cargo,
     clippy::complexity,
@@ -39,6 +40,9 @@
 //!   allowing the developer to compare the first lock location in their file to the panicking
 //!   lock location, aiding in debugging.
 //!
+//! * The `nightly` feature implements the [`core::error::Error`] trait if the `enable_std` trait
+//!   is not present. This requires a nightly compiler to compile.
+//!
 //! [`LockCell<T>`]: ./struct.LockCell.html
 //! [`RefCell<T>`]: http://doc.rust-lang.org/std/cell/struct.RefCell.html
 //! [`Rc<T>`]: https://doc.rust-lang.org/std/rc/struct.Rc.html
@@ -46,6 +50,7 @@
 //! [`Sync`]: https://doc.rust-lang.org/std/marker/trait.Sync.html
 //! [`std::error::Error`]: https://doc.rust-lang.org/std/error/trait.Error.html
 //! [`TryLockError`]: ./struct.TryLockError.html
+//! [`core::error::Error`]: https://doc.rust-lang.org/core/error/trait.Error.html
 
 #[cfg(feature = "debug_lockcell")]
 use core::panic::Location;
@@ -62,7 +67,9 @@ use core::{
     str::FromStr,
 };
 #[cfg(feature = "enable_std")]
-use std::error::Error as StdError;
+use std::error::Error as ErrorTrait;
+#[cfg(all(not(feature = "enable_std"), feature = "nightly"))]
+use core::error::Error as ErrorTrait;
 
 /// A mutable memory location with dynamically checked borrow rules.
 ///
@@ -805,8 +812,8 @@ impl fmt::Display for TryLockError {
     }
 }
 
-#[cfg(feature = "enable_std")]
-impl StdError for TryLockError {}
+#[cfg(any(feature = "enable_std", feature = "nightly"))]
+impl ErrorTrait for TryLockError {}
 
 #[cfg(test)]
 mod tests {

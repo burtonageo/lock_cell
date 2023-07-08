@@ -26,6 +26,9 @@ The [`Sync`] equivalent of a `LockCell` is [`Mutex<T>`].
   allowing the developer to compare the first lock location in their file to the panicking
   lock location, aiding in debugging.
 
+* The `nightly` feature implements the [`core::error::Error`] trait if the `enable_std` trait
+  is not present. This requires a nightly compiler to compile.
+
 [`LockCell<T>`]: https://docs.rs/lock_cell/latest/lock_cell/struct.LockCell.html
 [`RefCell<T>`]: http://doc.rust-lang.org/std/cell/struct.RefCell.html
 [`Rc<T>`]: https://doc.rust-lang.org/std/rc/struct.Rc.html
@@ -33,3 +36,4 @@ The [`Sync`] equivalent of a `LockCell` is [`Mutex<T>`].
 [`Sync`]: https://doc.rust-lang.org/std/marker/trait.Sync.html
 [`std::error::Error`]: https://doc.rust-lang.org/std/error/trait.Error.html
 [`TryLockError`]: https://docs.rs/lock_cell/latest/lock_cell/struct.TryLockError.html
+[`core::error::Error`]: https://doc.rust-lang.org/core/error/trait.Error.html

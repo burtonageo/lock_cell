@@ -18,3 +18,4 @@ debug_lockcell = []
 enable_std = []
 # rust-analyzer wants this feature present here.
 logging = []
+nightly = []
