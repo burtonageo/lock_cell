@@ -59,6 +59,7 @@ use core::{
     marker::PhantomData,
     mem::{self, ManuallyDrop},
     ops::{Deref, DerefMut, FnOnce},
+    str::FromStr,
 };
 #[cfg(feature = "enable_std")]
 use std::error::Error as StdError;
@@ -478,6 +479,14 @@ impl<T: Default> Default for LockCell<T> {
     #[inline]
     fn default() -> Self {
         Self::new(Default::default())
+    }
+}
+
+impl<T: FromStr> FromStr for LockCell<T> {
+    type Err = T::Err;
+    #[inline]
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        T::from_str(s).map(LockCell::new)
     }
 }
 
